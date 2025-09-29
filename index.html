@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Признаки и Свойства — 2 уровня</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #fff6f8;
+      --accent: #f59bbd;
+      --accent-2: #ffc6d9;
+      --accent-3: #ffe5ee;
+      --text: #7a2f54;
+      --card: #ffffff;
+      --danger: #ff6b81;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; padding: 40px 20px; display: flex; flex-direction: column; align-items: center;
+      font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text);
+    }
+    h1 { color: var(--accent); font-size: clamp(1.4rem, 2.6vw, 2.6rem); margin-bottom: 16px; text-align: center; }
+
+    .lives {
+      display: flex; gap: 6px; margin-bottom: 24px; justify-content: center;
+    }
+    .life {
+      font-size: 1.6rem;
+    }
+    .lost { opacity: .3; }
+
+    .level { display: none; flex-direction: column; gap: 32px; width: 100%; max-width: 1100px; }
+    .level.active { display: flex; }
+
+    .game-area { display: flex; flex-direction: row; gap: 24px; align-items: flex-start; }
+    .task-wrap { flex:1; display: grid; grid-template-columns: 1fr; gap: 14px; }
+    .card {
+      background: var(--card); padding: 16px 18px; border-radius: 18px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.06); cursor: grab; user-select: none; transition: transform .18s, box-shadow .18s;
+      margin: 4px 0;
+    }
+    .card:active { cursor: grabbing; transform: scale(1.03); }
+    .card.small { font-size: .95rem; }
+
+    .columns { flex:1; display: flex; flex-direction: row; gap: 20px; justify-content: space-between; }
+    .column {
+      flex: 1;
+      min-height: 300px; background: var(--accent-3); border-radius: 22px; padding: 24px 18px; text-align: center;
+      box-shadow: inset 0 0 0 2px var(--accent-2), 0 8px 16px rgba(0,0,0,.04);
+      transition: background .25s, box-shadow .25s;
+    }
+    .column h2 { margin: 12px 0 16px; color: var(--accent); font-size: 1.2rem; }
+    .column.dragover { background: #ffd3e4; box-shadow: inset 0 0 0 2px var(--accent), 0 10px 20px rgba(0,0,0,.06); }
+
+    .row { display:flex; gap:14px; align-items:center; justify-content:center; flex-wrap: wrap; margin-top: 20px; }
+
+    .btn {
+      background: var(--accent); color: #fff; border: none; border-radius: 28px; padding: 12px 22px;
+      font-size: 1rem; cursor: pointer; transition: transform .15s, background .25s; box-shadow: 0 10px 16px rgba(245,155,189,.35);
+    }
+    .btn:hover { transform: translateY(-1px); background: #f07fac; }
+
+    .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+      background: var(--card); border-radius: 16px; padding: 10px 16px; box-shadow: 0 10px 24px rgba(0,0,0,.12);
+      display: none; }
+    .toast.show { display: inline-block; }
+
+    .gameover {
+      position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(255,246,248,.95);
+      display: none; flex-direction: column; justify-content: center; align-items: center;
+      font-size: 1.4rem; font-weight:600; color: var(--danger); z-index: 10;
+    }
+    .gameover button { margin-top:20px; }
+
+    footer { margin-top: auto; opacity: .7; font-size: .95rem; padding-top: 40px; text-align:center; }
+    .subscribe-btn {
+      margin-top: 10px; display:inline-block; background: var(--accent); color: #fff; text-decoration:none; padding: 10px 20px;
+      border-radius: 24px; font-size: .95rem; box-shadow: 0 6px 14px rgba(245,155,189,.35); transition: background .25s;
+    }
+    .subscribe-btn:hover { background:#f07fac; }
+
+    @media(max-width:768px){
+      .game-area { flex-direction: column; }
+      .columns { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Раздели: Признак или Свойство?</h1>
+  <div class="lives" id="lives"></div>
+
+  <!-- Уровень 1 -->
+  <section class="level active" id="level1">
+    <div class="game-area">
+      <div class="task-wrap" id="tasks1"></div>
+      <div class="columns">
+        <div class="column" data-type="признак"><h2>Признак</h2></div>
+        <div class="column" data-type="свойство"><h2>Свойство</h2></div>
+      </div>
+    </div>
+    <div class="row"><button class="btn" id="toLevel2" disabled>Дальше → уровень 2</button></div>
+  </section>
+
+  <!-- Уровень 2 -->
+  <section class="level" id="level2">
+    <div class="game-area">
+      <div class="task-wrap" id="tasks2"></div>
+      <div class="columns">
+        <div class="column" data-type="признак"><h2>Признак</h2></div>
+        <div class="column" data-type="свойство"><h2>Свойство</h2></div>
+      </div>
+    </div>
+    <p id="finalMsg" style="font-weight:600; text-align:center; margin-top:20px; display:none;">🎉 Браво! Все карточки разложены верно!</p>
+  </section>
+
+  <div class="toast" id="toast">Ты умничка! Продолжай 💗</div>
+
+  <div class="gameover" id="gameover">
+    <p>Упс 😔 Жизни закончились! Попробуй снова!</p>
+    <button class="btn" id="restartBtn">Начать заново</button>
+  </div>
+
+  <footer>
+    Мой канал: <b>@lera_easy_math</b><br/>
+    <a href="https://t.me/lera_easy_math" target="_blank" class="subscribe-btn">Подписаться 💕</a>
+  </footer>
+
+  <script>
+    // === Логика игры ===
+    let lives = 3;
+
+    function renderLives(){
+      const cont = document.getElementById('lives');
+      cont.innerHTML = '';
+      for(let i=0;i<3;i++){
+        const heart = document.createElement('span');
+        heart.className = i<lives ? 'life' : 'life lost';
+        heart.textContent = '❤';
+        cont.appendChild(heart);
+      }
+    }
+    renderLives();
+
+    // === Наборы карточек ===
+    const tasksLevel1 = [
+      { text: 'Яблоко красное и сладкое', type: 'свойство' },
+      { text: 'Лимон кислый', type: 'свойство' },
+      { text: 'Лёд холодный и твёрдый', type: 'свойство' },
+      { text: 'Мёд вязкий и сладкий', type: 'свойство' },
+      { text: 'Стекло прозрачное и хрупкое', type: 'свойство' },
+      { text: 'Молоко белое и жидкое', type: 'свойство' },
+      { text: 'Перец острый', type: 'свойство' },
+      { text: 'Огурец зелёный и сочный', type: 'свойство' },
+      { text: 'Хлеб свежий и мягкий', type: 'свойство' },
+      { text: 'Масло сливочное жирное', type: 'свойство' },
+      { text: 'Если животное с шерстью, мурлычет и домашнее — это кот', type: 'признак' },
+      { text: 'Если напиток сладкий с пузырьками и в бутылке — это лимонад', type: 'признак' },
+      { text: 'Если круглая лепёшка с соусом и начинкой сверху — это пицца', type: 'признак' },
+      { text: 'Если обувь на высокой тонкой шпильке — это туфли на каблуке', type: 'признак' },
+      { text: 'Если длинный зелёный овощ с пупырышками — это огурец', type: 'признак' },
+      { text: 'Если устройство с большим экраном и управляется касанием — это планшет', type: 'признак' },
+      { text: 'Если транспорт с двумя колёсами и педалями — это велосипед', type: 'признак' },
+      { text: 'Если напиток чёрный, горький и бодрит — это кофе', type: 'признак' },
+      { text: 'Если ягоды растут кистями и бывают зелёные или фиолетовые — это виноград', type: 'признак' },
+      { text: 'Если сладкая газированная вода тёмная с карамельным вкусом — это кола', type: 'признак' },
+    ];
+
+    const tasksLevel2 = [
+      { text: 'Сумма углов треугольника равна 180°', type: 'свойство' },
+      { text: 'В равнобедренном треугольнике углы при основании равны', type: 'свойство' },
+      { text: 'В равнобедренном треугольнике медиана к основанию — и биссектриса, и высота', type: 'свойство' },
+      { text: 'В параллелограмме противоположные стороны параллельны и равны', type: 'свойство' },
+      { text: 'В параллелограмме диагонали пересекаются и делятся пополам', type: 'свойство' },
+      { text: 'В ромбе все стороны равны', type: 'свойство' },
+      { text: 'Диагонали ромба взаимно перпендикулярны', type: 'свойство' },
+      { text: 'В прямоугольнике все углы прямые', type: 'свойство' },
+      { text: 'В трапеции основания параллельны', type: 'свойство' },
+      { text: 'Средняя линия треугольника параллельна основанию и равна его половине', type: 'свойство' },
+      { text: 'Если в треугольнике два угла равны — он равнобедренный', type: 'признак' },
+      { text: 'Если диагонали четырёхугольника пересекаются и делятся пополам — это параллелограмм', type: 'признак' },
+      { text: 'Если одна пара противоположных сторон параллельна и равна — это параллелограмм', type: 'признак' },
+      { text: 'Если в параллелограмме диагонали равны — это прямоугольник', type: 'признак' },
+      { text: 'Если все углы четырёхугольника прямые — это прямоугольник', type: 'признак' },
+      { text: 'Если все стороны четырёхугольника равны — это ромб', type: 'признак' },
+      { text: 'Если в параллелограмме диагонали перпендикулярны — это ромб', type: 'признак' },
+      { text: 'Если боковые стороны трапеции равны — это равнобедренная трапеция', type: 'признак' },
+      { text: 'Если один угол треугольника прямой — треугольник прямоугольный', type: 'признак' },
+      { text: 'Если все три стороны треугольника равны — он равносторонний', type: 'признак' },
+    ];
+
+    // === Утилиты ===
+    const qs = (sel, ctx=document) => ctx.querySelector(sel);
+    const qsa = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+
+    function shuffle(arr){
+      for(let i=arr.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [arr[i],arr[j]]=[arr[j],arr[i]];
+      }
+      return arr;
+    }
+
+    // === Рендер карточек ===
+    function renderTasks(tasks, containerId){
+      const cont = qs('#'+containerId);
+      cont.innerHTML = '';
+      shuffle(tasks).forEach((t,idx)=>{
+        const card = document.createElement('div');
+        card.className = 'card small';
+        card.textContent = t.text;
+        card.draggable = true;
+        card.dataset.type = t.type;
+        card.id = containerId + '_card_' + idx;
+        cont.appendChild(card);
+      });
+    }
+
+    renderTasks(tasksLevel1, 'tasks1');
+    renderTasks(tasksLevel2, 'tasks2');
+
+    // === DnD ===
+    function enableDnD(levelId){
+      const level = qs('#'+levelId);
+      const columns = qsa('.column', level);
+
+      level.addEventListener('dragstart', (e)=>{
+        const el = e.target.closest('.card');
+        if(!el) return;
+        e.dataTransfer.setData('text/plain', JSON.stringify({ id: el.id, type: el.dataset.type }));
+      });
+
+      columns.forEach(col=>{
+        col.addEventListener('dragover', e=>{ e.preventDefault(); col.classList.add('dragover'); });
+        col.addEventListener('dragleave', ()=> col.classList.remove('dragover'));
+        col.addEventListener('drop', e=>{
+          e.preventDefault();
+          col.classList.remove('dragover');
+          const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+          const dragEl = document.getElementById(data.id);
+          if(!dragEl) return;
+          if(col.dataset.type === data.type){
+            dragEl.draggable = false;
+            dragEl.style.cursor = 'default';
+            col.appendChild(dragEl);
+            showToast('Верно! ✔️');
+            checkCompletion(levelId);
+          } else {
+            loseLife();
+            dragEl.animate([
+              {transform:'translateX(0)'},
+              {transform:'translateX(-6px)'},
+              {transform:'translateX(6px)'},
+              {transform:'translateX(0)'}
+            ],{duration:250});
+          }
+        });
+      });
+    }
+
+    function showToast(msg){
+      const t = qs('#toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(()=> t.classList.remove('show'), 1200);
+    }
+
+    function checkCompletion(levelId){
+      const tasksWrap = qs('#'+ (levelId==='level1'?'tasks1':'tasks2'));
+      const left = qsa('.card', tasksWrap).length;
+      if(left===0){
+        if(levelId==='level1'){
+          qs('#toLevel2').disabled = false;
+          showToast('Уровень 1 пройден!');
+        } else {
+          qs('#finalMsg').style.display = 'block';
+          showToast('Игра пройдена!');
+        }
+      }
+    }
+
+    function loseLife(){
+      lives--;
+      if(lives<0) lives=0;
+      renderLives();
+      if(lives===0){
+        const overlay = qs('#gameover');
+        overlay.style.display = 'flex';
+      }
+    }
+
+    enableDnD('level1');
+    enableDnD('level2');
+
+    // Сброс игры без перезагрузки
+    function resetGame(){
+      lives = 3;
+      renderLives();
+      // Очистить колонки от карточек
+      qsa('.column').forEach(col=> qsa('.card', col).forEach(c=>c.remove()));
+      // Перерисовать задания
+      renderTasks(tasksLevel1, 'tasks1');
+      renderTasks(tasksLevel2, 'tasks2');
+      // Спрятать оверлей и финал
+      qs('#gameover').style.display = 'none';
+      const msg = qs('#finalMsg'); if(msg) msg.style.display='none';
+      // Вернуть на уровень 1
+      qs('#level2').classList.remove('active');
+      qs('#level1').classList.add('active');
+      // Заблокировать переход на 2 уровень до раскладки
+      const btn = qs('#toLevel2'); if(btn) btn.disabled = true;
+    }
+    qs('#restartBtn').addEventListener('click', resetGame);
+
+    // Переход на 2 уровень с предупреждением, если не всё разложено
+    qs('#toLevel2').addEventListener('click', ()=>{
+      const left = qsa('.card', qs('#tasks1')).length;
+      if(left>0){
+        const go = confirm('Ты не закончил уровень. Перейти на следующий? Прогресс уровня 1 не сохранится.');
+        if(!go) return;
+      }
+      qs('#level1').classList.remove('active');
+      qs('#level2').classList.add('active');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  </script>
+</body>
+</html>
